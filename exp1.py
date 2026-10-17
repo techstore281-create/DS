@@ -1,9 +1,18 @@
-
 import pandas as pd
 import numpy as np
+import zipfile
+import io
+import requests
 
-# Load the dataset
-df = pd.read_csv("diabetic_data.csv")
+# Load the dataset directly from the UCI repository
+url = "https://archive.ics.uci.edu/static/public/296/diabetes+130-us+hospitals+for+years+1999-2008.zip"
+
+response = requests.get(url, timeout=60)
+response.raise_for_status()
+
+with zipfile.ZipFile(io.BytesIO(response.content)) as z:
+    with z.open("diabetic_data.csv") as f:
+        df = pd.read_csv(f)
 
 print("Dataset Shape:", df.shape)
 
