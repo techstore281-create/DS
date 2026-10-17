@@ -1,8 +1,10 @@
+# pip install kagglehub tensorflow scikit-learn matplotlib
 
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import kagglehub
 
 from tensorflow.keras import layers, models
 from sklearn.model_selection import train_test_split
@@ -12,23 +14,33 @@ from sklearn.metrics import (
     ConfusionMatrixDisplay
 )
 
-# Step 1: Define configuration
+# Step 1: Download the dataset from Kaggle
+download_path = kagglehub.dataset_download(
+    "tawsifurrahman/covid19-radiography-database"
+)
+print("Downloaded to:", download_path)
+
+
+def find_class_dir(root, class_name):
+    """Find <...>/<class_name>/images anywhere under root."""
+    for current, dirs, _ in os.walk(root):
+        if os.path.basename(current) == class_name and "images" in dirs:
+            return os.path.join(current, "images")
+    raise FileNotFoundError(
+        f"Could not find '{class_name}/images' under {root}"
+    )
+
+
+# Step 2: Define configuration
 IMG_SIZE = (64, 64)
 BATCH_SIZE = 32
 SEED = 42
 
-DATASET_DIR = "COVID-19_Radiography_Dataset"
-
-COVID_DIR = os.path.join(
-    DATASET_DIR, "COVID", "images"
-)
-
-NORMAL_DIR = os.path.join(
-    DATASET_DIR, "Normal", "images"
-)
+COVID_DIR = find_class_dir(download_path, "COVID")
+NORMAL_DIR = find_class_dir(download_path, "Normal")
 
 
-# Step 2: Get image paths from folders
+# Step 3: Get image paths from folders
 def get_images(folder):
     extensions = (".png", ".jpg", ".jpeg")
 
@@ -46,7 +58,7 @@ print("COVID images:", len(covid_images))
 print("Normal images:", len(normal_images))
 
 
-# Step 3: Create labels
+# Step 4: Create labels
 image_paths = normal_images + covid_images
 
 labels = (
@@ -55,7 +67,7 @@ labels = (
 )
 
 
-# Step 4: Split data into training and testing sets
+# Step 5: Split data into training and testing sets
 train_paths, test_paths, train_labels, test_labels = (
     train_test_split(
         image_paths,
@@ -67,7 +79,7 @@ train_paths, test_paths, train_labels, test_labels = (
 )
 
 
-# Step 5: Load and preprocess images
+# Step 6: Load and preprocess images
 def load_image(path, label):
     image = tf.io.read_file(path)
 
@@ -104,7 +116,7 @@ test_ds = test_ds.map(
 )
 
 
-# Step 6: Shuffle, batch, and optimize datasets
+# Step 7: Shuffle, batch, and optimize datasets
 train_ds = train_ds.shuffle(
     buffer_size=len(train_paths),
     seed=SEED
@@ -117,7 +129,7 @@ train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
 test_ds = test_ds.prefetch(tf.data.AUTOTUNE)
 
 
-# Step 7: Build the CNN model
+# Step 8: Build the CNN model
 model = models.Sequential([
     layers.Input(shape=(64, 64, 3)),
 
@@ -149,7 +161,7 @@ model = models.Sequential([
 ])
 
 
-# Step 8: Compile the model
+# Step 9: Compile the model
 model.compile(
     optimizer="adam",
     loss="binary_crossentropy",
@@ -159,7 +171,7 @@ model.compile(
 model.summary()
 
 
-# Step 9: Calculate class weights
+# Step 10: Calculate class weights
 normal_count = len(normal_images)
 covid_count = len(covid_images)
 
@@ -174,7 +186,7 @@ print("\nClass Weights:")
 print(class_weights)
 
 
-# Step 10: Train the model
+# Step 11: Train the model
 history = model.fit(
     train_ds,
     validation_data=test_ds,
@@ -183,7 +195,7 @@ history = model.fit(
 )
 
 
-# Step 11: Evaluate predictions
+# Step 12: Evaluate predictions
 y_true = np.concatenate([
     y.numpy().flatten()
     for x, y in test_ds
@@ -196,7 +208,7 @@ y_pred = (
 ).astype(int)
 
 
-# Step 12: Display classification report
+# Step 13: Display classification report
 print("\n--- Balanced Classification Report ---")
 
 print(
@@ -210,7 +222,7 @@ print(
 )
 
 
-# Step 13: Plot confusion matrix
+# Step 14: Plot confusion matrix
 cm = confusion_matrix(
     y_true,
     y_pred,
@@ -235,7 +247,7 @@ plt.tight_layout()
 plt.show()
 
 
-# Step 14: Plot training and validation accuracy
+# Step 15: Plot training and validation accuracy
 plt.figure(figsize=(6, 4))
 
 plt.plot(
