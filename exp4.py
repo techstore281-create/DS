@@ -1,7 +1,9 @@
+# pip install ucimlrepo scikit-learn matplotlib pandas
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from ucimlrepo import fetch_ucirepo
 
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
@@ -13,7 +15,9 @@ from sklearn.metrics import (
     ConfusionMatrixDisplay
 )
 
-df = pd.read_csv("support2.csv")
+# Load SUPPORT2 directly from the UCI repository (ID 880)
+support2 = fetch_ucirepo(id=880)
+df = support2.data.original.copy()   # full table: features + targets
 
 print("Dataset Shape:", df.shape)
 
