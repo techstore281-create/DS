@@ -1,0 +1,56 @@
+# Healthcare AI / Data Science Experiments
+# Recommended: Python 3.11 in a virtual environment
+# Install with: python -m pip install -r requirements.txt
+
+# Core data handling and scientific computing
+numpy
+pandas
+scipy
+openpyxl
+requests
+
+# Data visualization and exploratory data analysis
+matplotlib
+seaborn
+plotly
+ydata-profiling
+
+# Machine learning and model evaluation
+scikit-learn
+imbalanced-learn
+xgboost
+lifelines
+joblib
+
+# Medical images (MRI / X-ray)
+Pillow
+opencv-python
+torch
+torchvision
+timm
+
+# NLP and medical text / entity extraction
+nltk
+spacy
+transformers
+vaderSentiment
+
+# Explainable AI
+shap
+lime
+
+# APIs and web/mobile AI project backends
+fastapi
+uvicorn[standard]
+pydantic
+streamlit
+python-multipart
+
+# Optional interoperability with healthcare data formats
+# Uncomment if your experiments use FHIR resources:
+# fhir.resources
+
+# Documentation and presentation generation
+python-docx
+python-pptx
+reportlab

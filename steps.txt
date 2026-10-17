@@ -1,0 +1,10 @@
+python -m venv .venv
+
+.venv\Scripts\activate
+
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt   
+
+
+for 3 and 5 if needed 
+python -m spacy download en_core_web_sm

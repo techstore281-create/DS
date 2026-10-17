@@ -1,0 +1,153 @@
+PS D:\Raj_parihar\DS\exp3> python medical_ai_pipeline.py
+2026-10-15 17:52:38.377800: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-10-15 17:53:00.918674: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+
+==============================================================================
+>>> STEP 1: DATA COLLECTION
+==============================================================================
+[+] Real Chest X-ray dataset found at: data/chest_xray
+
+[i] Dataset inventory:
+    train: {'NORMAL': 1341, 'PNEUMONIA': 3875}  (total=5216)
+    val  : {'NORMAL': 8, 'PNEUMONIA': 8}  (total=16)
+    test : {'NORMAL': 234, 'PNEUMONIA': 390}  (total=624)
+
+==============================================================================
+>>> STEP 2: DATA CLEANING & PREPROCESSING
+==============================================================================
+[+] Kept:  5856   Removed (corrupt/unsupported): 0
+
+--- Class balance check ---
+  train: NORMAL=1341 (25.7%)  PNEUMONIA=3875 (74.3%)  
+  val  : NORMAL=8 (50.0%)  PNEUMONIA=8 (50.0%)  
+  test : NORMAL=234 (37.5%)  PNEUMONIA=390 (62.5%)  
+
+--- Preprocessing config ---
+  Image size       : 224x224
+  Batch size       : 16
+  Normalization    : MobileNetV2 preprocess_input ([-1, 1])
+  Augmentation     : rotation, zoom, shift, horizontal flip
+
+==============================================================================
+>>> STEP 3: DATA INTEGRATION — tf.data pipelines
+==============================================================================
+2026-10-15 17:55:10.975672: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+[+] Train batches: 326  |  Val: 1  |  Test: 39
+[+] Train images : 5216
+[+] Val images   : 16
+[+] Test images  : 624
+
+==============================================================================
+>>> STEP 4: MODEL — MobileNetV2 Transfer Learning
+==============================================================================
+Model: "functional_1"
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Layer (type)                         ┃ Output Shape                ┃         Param # ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ input_layer_2 (InputLayer)           │ (None, 224, 224, 3)         │               0 │
+├──────────────────────────────────────┼─────────────────────────────┼─────────────────┤
+│ mobilenetv2_1.00_224 (Functional)    │ (None, 7, 7, 1280)          │       2,257,984 │
+├──────────────────────────────────────┼─────────────────────────────┼─────────────────┤
+│ global_average_pooling2d             │ (None, 1280)                │               0 │
+│ (GlobalAveragePooling2D)             │                             │                 │
+├──────────────────────────────────────┼─────────────────────────────┼─────────────────┤
+│ dropout (Dropout)                    │ (None, 1280)                │               0 │
+├──────────────────────────────────────┼─────────────────────────────┼─────────────────┤
+│ dense (Dense)                        │ (None, 128)                 │         163,968 │
+├──────────────────────────────────────┼─────────────────────────────┼─────────────────┤
+│ dropout_1 (Dropout)                  │ (None, 128)                 │               0 │
+├──────────────────────────────────────┼─────────────────────────────┼─────────────────┤
+│ dense_1 (Dense)                      │ (None, 1)                   │             129 │
+└──────────────────────────────────────┴─────────────────────────────┴─────────────────┘
+ Total params: 2,422,081 (9.24 MB)
+ Trainable params: 2,025,537 (7.73 MB)
+ Non-trainable params: 396,544 (1.51 MB)
+
+==============================================================================
+>>> STEP 5: MODEL TRAINING
+==============================================================================
+[+] Class weights: {0: 1.9448173005219984, 1: 0.6730322580645162}
+Epoch 1/8
+326/326 ━━━━━━━━━━━━━━━━━━━━ 0s 575ms/step - accuracy: 0.8575 - auc: 0.9323 - loss: 0.2953 - precision: 0.9443 - recall: 0.8580   
+Epoch 1: val_auc improved from None to 0.50000, saving model to outputs/best_model.keras
+326/326 ━━━━━━━━━━━━━━━━━━━━ 226s 593ms/step - accuracy: 0.9156 - auc: 0.9765 - loss: 0.1952 - precision: 0.9709 - recall: 0.9138 - val_accuracy: 0.5000 - val_auc: 0.5000 - val_loss: 4.9721 - val_precision: 0.5000 - val_recall: 1.0000 - learning_rate: 1.0000e-04
+Epoch 2/8
+326/326 ━━━━━━━━━━━━━━━━━━━━ 0s 584ms/step - accuracy: 0.9593 - auc: 0.9937 - loss: 0.0969 - precision: 0.9907 - recall: 0.9538  
+Epoch 2: val_auc did not improve from 0.50000
+326/326 ━━━━━━━━━━━━━━━━━━━━ 192s 586ms/step - accuracy: 0.9628 - auc: 0.9939 - loss: 0.0932 - precision: 0.9915 - recall: 0.9582 - val_accuracy: 0.5000 - val_auc: 0.5000 - val_loss: 4.4466 - val_precision: 0.5000 - val_recall: 1.0000 - learning_rate: 1.0000e-04
+Epoch 3/8
+326/326 ━━━━━━━━━━━━━━━━━━━━ 0s 581ms/step - accuracy: 0.9717 - auc: 0.9953 - loss: 0.0792 - precision: 0.9914 - recall: 0.9700  
+Epoch 3: val_auc improved from 0.50000 to 0.68750, saving model to outputs/best_model.keras
+326/326 ━━━━━━━━━━━━━━━━━━━━ 192s 588ms/step - accuracy: 0.9674 - auc: 0.9950 - loss: 0.0830 - precision: 0.9910 - recall: 0.9649 - val_accuracy: 0.5000 - val_auc: 0.6875 - val_loss: 3.4890 - val_precision: 0.5000 - val_recall: 1.0000 - learning_rate: 1.0000e-04
+Epoch 4/8
+326/326 ━━━━━━━━━━━━━━━━━━━━ 0s 3s/step - accuracy: 0.9781 - auc: 0.9969 - loss: 0.0585 - precision: 0.9933 - recall: 0.9770     
+Epoch 4: val_auc improved from 0.68750 to 0.93750, saving model to outputs/best_model.keras
+326/326 ━━━━━━━━━━━━━━━━━━━━ 826s 3s/step - accuracy: 0.9755 - auc: 0.9967 - loss: 0.0610 - precision: 0.9939 - recall: 0.9729 - val_accuracy: 0.5625 - val_auc: 0.9375 - val_loss: 1.7270 - val_precision: 0.5333 - val_recall: 1.0000 - learning_rate: 1.0000e-04
+Epoch 5/8
+326/326 ━━━━━━━━━━━━━━━━━━━━ 0s 568ms/step - accuracy: 0.9753 - auc: 0.9956 - loss: 0.0675 - precision: 0.9922 - recall: 0.9746  
+Epoch 5: val_auc did not improve from 0.93750
+326/326 ━━━━━━━━━━━━━━━━━━━━ 186s 570ms/step - accuracy: 0.9741 - auc: 0.9965 - loss: 0.0664 - precision: 0.9924 - recall: 0.9726 - val_accuracy: 0.6250 - val_auc: 0.8750 - val_loss: 1.5125 - val_precision: 0.5714 - val_recall: 1.0000 - learning_rate: 1.0000e-04
+Epoch 6/8
+326/326 ━━━━━━━━━━━━━━━━━━━━ 0s 578ms/step - accuracy: 0.9763 - auc: 0.9969 - loss: 0.0610 - precision: 0.9943 - recall: 0.9738  
+Epoch 6: val_auc did not improve from 0.93750
+326/326 ━━━━━━━━━━━━━━━━━━━━ 189s 579ms/step - accuracy: 0.9789 - auc: 0.9977 - loss: 0.0530 - precision: 0.9945 - recall: 0.9770 - val_accuracy: 0.5625 - val_auc: 0.6875 - val_loss: 3.6014 - val_precision: 0.5333 - val_recall: 1.0000 - learning_rate: 1.0000e-04
+Epoch 7/8
+326/326 ━━━━━━━━━━━━━━━━━━━━ 0s 520ms/step - accuracy: 0.9738 - auc: 0.9966 - loss: 0.0668 - precision: 0.9921 - recall: 0.9726  
+Epoch 7: val_auc improved from 0.93750 to 1.00000, saving model to outputs/best_model.keras
+326/326 ━━━━━━━━━━━━━━━━━━━━ 171s 523ms/step - accuracy: 0.9747 - auc: 0.9970 - loss: 0.0608 - precision: 0.9937 - recall: 0.9721 - val_accuracy: 1.0000 - val_auc: 1.0000 - val_loss: 0.0062 - val_precision: 1.0000 - val_recall: 1.0000 - learning_rate: 1.0000e-04
+Epoch 8/8
+326/326 ━━━━━━━━━━━━━━━━━━━━ 0s 500ms/step - accuracy: 0.9865 - auc: 0.9980 - loss: 0.0399 - precision: 0.9957 - recall: 0.9860  
+Epoch 8: val_auc did not improve from 1.00000
+326/326 ━━━━━━━━━━━━━━━━━━━━ 164s 501ms/step - accuracy: 0.9850 - auc: 0.9985 - loss: 0.0421 - precision: 0.9958 - recall: 0.9840 - val_accuracy: 1.0000 - val_auc: 1.0000 - val_loss: 0.0148 - val_precision: 1.0000 - val_recall: 1.0000 - learning_rate: 1.0000e-04
+
+==============================================================================
+>>> STEP 6: EVALUATION ON TEST SET
+==============================================================================
+[+] Loading best checkpoint...
+
+--- Test Metrics ---
+  Accuracy    : 0.8910
+  Precision   : 0.8562
+  Recall      : 0.9923
+  F1-Score    : 0.9192
+  ROC-AUC     : 0.9736
+
+--- Classification Report ---
+              precision    recall  f1-score   support
+
+      NORMAL       0.98      0.72      0.83       234
+   PNEUMONIA       0.86      0.99      0.92       390
+
+    accuracy                           0.89       624
+   macro avg       0.92      0.86      0.88       624
+weighted avg       0.90      0.89      0.89       624
+
+--- Confusion Matrix ---
+                  Pred NORMAL  Pred PNEUMONIA
+Actual NORMAL             169              65
+Actual PNEUMONIA            3             387
+
+[+] Saved outputs/metrics.txt
+
+==============================================================================
+>>> STEP 7: VISUALIZATIONS
+==============================================================================
+[+] Saved outputs/training_curves.png
+
+==============================================================================
+>>> STEP 8: GRAD-CAM EXPLAINABILITY
+==============================================================================
+Traceback (most recent call last):
+  File "D:\Raj_parihar\DS\exp3\medical_ai_pipeline.py", line 440, in <module>
+    heat, prob = grad_cam(model, tf.constant(arr))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Raj_parihar\DS\exp3\medical_ai_pipeline.py", line 395, in grad_cam
+    conv_out, preds = grad_model(img_array, training=False)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Raj Parihar\AppData\Local\Programs\Python\Python312\Lib\site-packages\keras\src\utils\traceback_utils.py", line 122, in error_handler
+    raise e.with_traceback(filtered_tb) from None
+  File "C:\Users\Raj Parihar\AppData\Local\Programs\Python\Python312\Lib\site-packages\keras\src\ops\function.py", line 214, in _run_through_graph
+    output_tensors.append(tensor_dict[id(x)])
+                          ~~~~~~~~~~~^^^^^^^
+KeyError: "Exception encountered when calling Functional.call().\n\n\x1b[1m2160628147328\x1b[0m\n\nArguments received by Functional.call():\n  • inputs=tf.Tensor(shape=(1, 224, 224, 3), dtype=float32)\n  • training=False\n  • mask=None\n  • kwargs=<class 'inspect._empty'>"
