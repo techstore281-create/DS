@@ -1,6 +1,5 @@
-
 # Experiment 8: Explainable AI (XAI) in Healthcare
-# Dataset: Breast Cancer Wisconsin Diagnostic Dataset
+# Dataset: Breast Cancer Wisconsin Diagnostic Dataset (UCI)
 
 # STEP 1: Import required libraries
 import numpy as np
@@ -8,7 +7,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import shap
 
-from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
@@ -19,12 +17,33 @@ from sklearn.metrics import (
 )
 from sklearn.inspection import permutation_importance
 
-# STEP 2: Load the healthcare dataset
-data = load_breast_cancer()
+# STEP 2: Load the healthcare dataset directly from the UCI repository
+url = (
+    "https://archive.ics.uci.edu/ml/machine-learning-databases/"
+    "breast-cancer-wisconsin/wdbc.data"
+)
 
-# Convert the dataset into a pandas DataFrame
-X = pd.DataFrame(data.data, columns=data.feature_names)
-y = pd.Series(data.target, name="target")
+base_features = [
+    "radius", "texture", "perimeter", "area", "smoothness",
+    "compactness", "concavity", "concave points",
+    "symmetry", "fractal dimension"
+]
+
+feature_names = (
+    [f"mean {f}" for f in base_features]
+    + [f"{f} error" for f in base_features]
+    + [f"worst {f}" for f in base_features]
+)
+
+columns = ["id", "diagnosis"] + feature_names
+
+raw = pd.read_csv(url, header=None, names=columns)
+
+class_names = np.array(["malignant", "benign"])
+
+# Same encoding as scikit-learn: 0 = malignant, 1 = benign
+X = raw[feature_names].copy()
+y = raw["diagnosis"].map({"M": 0, "B": 1}).rename("target")
 
 # Display dataset information
 print("Dataset loaded successfully!")
@@ -86,7 +105,7 @@ print("\nClassification Report:")
 print(classification_report(
     y_test,
     y_pred,
-    target_names=data.target_names
+    target_names=class_names
 ))
 
 # STEP 7: Plot the confusion matrix
@@ -94,7 +113,7 @@ cm = confusion_matrix(y_test, y_pred)
 
 display = ConfusionMatrixDisplay(
     confusion_matrix=cm,
-    display_labels=data.target_names
+    display_labels=class_names
 )
 
 display.plot(cmap="Blues", values_format="d")
@@ -153,8 +172,8 @@ patient_probabilities = model.predict_proba(patient)[0]
 
 print("\nIndividual Patient Explanation")
 print("------------------------------")
-print("Predicted class:", data.target_names[patient_prediction])
-print("Actual class:", data.target_names[y_test.iloc[0]])
+print("Predicted class:", class_names[patient_prediction])
+print("Actual class:", class_names[y_test.iloc[0]])
 print("Probability of malignant:", round(patient_probabilities[0], 4))
 print("Probability of benign:", round(patient_probabilities[1], 4))
 
