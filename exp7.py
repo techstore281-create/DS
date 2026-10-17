@@ -1,8 +1,10 @@
-
 import warnings
 warnings.filterwarnings("ignore")
 
 import re
+import io
+import zipfile
+import requests
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -31,8 +33,26 @@ from sklearn.metrics import (
     confusion_matrix
 )
 
-# Load the drug reviews dataset
-df = pd.read_csv("drugsComTrain_raw.csv")
+# Load the drug reviews dataset directly from the UCI repository
+url = (
+    "https://archive.ics.uci.edu/static/public/462/"
+    "drug+review+dataset+drugs+com.zip"
+)
+
+response = requests.get(url, timeout=120)
+response.raise_for_status()
+
+with zipfile.ZipFile(io.BytesIO(response.content)) as z:
+    print("Files in zip:", z.namelist())
+
+    # Pick the training file by name (it is tab-separated)
+    train_file = next(
+        n for n in z.namelist()
+        if n.lower().endswith("train_raw.tsv")
+    )
+
+    with z.open(train_file) as f:
+        df = pd.read_csv(f, sep="\t")
 
 df = df[['review', 'rating']].dropna()
 
@@ -231,4 +251,3 @@ print(f"Review : {new_review}")
 print(f"Predicted : {pred.upper()}")
 
 print("=" * 62)
-    
